@@ -7,6 +7,8 @@ plugins {
     id 'com.github.johnrengelman.shadow' version '5.2.0'
     id 'com.liferay.node' version '4.4.0'
     id 'com.github.psxpaul.execfork' version '0.1.8'
+    id 'com.palantir.git-version' version '0.11.0'
+    id 'nebula.lint' version '16.1.1'
     id 'com.palantir.git-version' version '0.12.3'
 }
 
@@ -86,6 +88,10 @@ test {
         events 'passed', 'skipped', 'failed'
         showStandardStreams = true
     }
+}
+
+gradleLint {
+    rules  = ['unused-dependency']
 }
 
 shadowJar {
