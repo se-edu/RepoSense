@@ -550,4 +550,8 @@ public class RepoConfiguration {
     public boolean isIgnoreCommitListOverriding() {
         return isIgnoreCommitListOverriding;
     }
+
+    public AuthorConfiguration getAuthorConfig() {
+        return authorConfig;
+    }
 }

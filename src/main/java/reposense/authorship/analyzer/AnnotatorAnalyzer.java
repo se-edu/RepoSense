@@ -10,6 +10,7 @@ import java.util.regex.Pattern;
 import reposense.authorship.model.FileInfo;
 import reposense.authorship.model.LineInfo;
 import reposense.model.Author;
+import reposense.model.AuthorConfiguration;
 
 /**
  * Analyzes the authorship of a {@code FileInfo} using the given annotations on the file.
@@ -23,12 +24,12 @@ public class AnnotatorAnalyzer {
     /**
      * Overrides the authorship information in {@code fileInfo} based on annotations given on the file.
      */
-    public static void aggregateAnnotationAuthorInfo(FileInfo fileInfo, Map<String, Author> authorAliasMap) {
+    public static void aggregateAnnotationAuthorInfo(FileInfo fileInfo, AuthorConfiguration authorConfig) {
         Optional<Author> currentAnnotatedAuthor = Optional.empty();
         Path filePath = Paths.get(fileInfo.getPath());
         for (LineInfo lineInfo : fileInfo.getLines()) {
             if (lineInfo.getContent().contains(AUTHOR_TAG)) {
-                Optional<Author> newAnnotatedAuthor = findAuthorInLine(lineInfo.getContent(), authorAliasMap,
+                Optional<Author> newAnnotatedAuthor = findAuthorInLine(lineInfo.getContent(), authorConfig,
                         currentAnnotatedAuthor);
 
                 if (!newAnnotatedAuthor.isPresent()) {
@@ -52,9 +53,10 @@ public class AnnotatorAnalyzer {
      *         {@code Optional.empty()} if an end author tag is used (i.e. "@@author"),
      *         or if the extracted author name is too short.
      */
-    private static Optional<Author> findAuthorInLine(String line, Map<String, Author> authorAliasMap,
+    private static Optional<Author> findAuthorInLine(String line, AuthorConfiguration authorConfig,
                                                      Optional<Author> currentAnnotatedAuthor) {
         try {
+            Map<String, Author> authorAliasMap = authorConfig.getAuthorDetailsToAuthorMap();
             String[] split = line.split(AUTHOR_TAG);
             String name = extractAuthorName(split[1]);
             if (name == null) {
@@ -63,6 +65,9 @@ public class AnnotatorAnalyzer {
                     return Optional.of(Author.UNKNOWN_AUTHOR);
                 }
                 return Optional.empty();
+            }
+            if (!authorAliasMap.containsKey(name) && !AuthorConfiguration.hasAuthorConfigFile()) {
+                authorConfig.addAuthor(new Author(name));
             }
             return Optional.of(authorAliasMap.getOrDefault(name, Author.UNKNOWN_AUTHOR));
         } catch (ArrayIndexOutOfBoundsException e) {

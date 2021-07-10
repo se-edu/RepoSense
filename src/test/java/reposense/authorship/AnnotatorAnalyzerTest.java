@@ -2,17 +2,19 @@ package reposense.authorship;
 
 import static reposense.model.Author.UNKNOWN_AUTHOR;
 
+import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.Calendar;
-import java.util.Collections;
 import java.util.Date;
 
+import org.junit.After;
 import org.junit.Before;
 import org.junit.Test;
 
 import reposense.authorship.model.FileInfo;
 import reposense.authorship.model.FileResult;
 import reposense.model.Author;
+import reposense.model.AuthorConfiguration;
 import reposense.template.GitTestTemplate;
 import reposense.util.TestUtil;
 
@@ -44,18 +46,33 @@ public class AnnotatorAnalyzerTest extends GitTestTemplate {
         config.setSinceDate(SINCE_DATE);
         config.setUntilDate(UNTIL_DATE);
         config.setZoneId(TIME_ZONE_ID_STRING);
+        AuthorConfiguration.setHasAuthorConfigFile(false);
+    }
+
+    @After
+    public void after() {
+        super.after();
+        AuthorConfiguration.setHasAuthorConfigFile(false);
     }
 
     @Test
     public void analyzeAnnotation_authorNamePresentInConfig_overrideAuthorship() {
-        config.setAuthorList(Arrays.asList(FAKE_AUTHOR, MAIN_AUTHOR));
+        config.setAuthorList(new ArrayList<>(Arrays.asList(FAKE_AUTHOR)));
         FileResult fileResult = getFileResult("annotationTest.java");
         assertFileAnalysisCorrectness(fileResult, Arrays.asList(EXPECTED_LINE_AUTHORS_OVERRIDE_AUTHORSHIP_TEST));
     }
 
     @Test
-    public void analyzeAnnotation_authorNameNotInConfig_disownCode() {
-        config.setAuthorList(Collections.singletonList(FAKE_AUTHOR));
+    public void analyzeAnnotation_authorNameNotInConfigAndNoAuthorConfigFile_acceptTaggedAuthor() {
+        config.setAuthorList(new ArrayList<>(Arrays.asList(FAKE_AUTHOR)));
+        FileResult fileResult = getFileResult("annotationTest.java");
+        assertFileAnalysisCorrectness(fileResult, Arrays.asList(EXPECTED_LINE_AUTHORS_OVERRIDE_AUTHORSHIP_TEST));
+    }
+
+    @Test
+    public void analyzeAnnotation_authorNameNotInConfigAndHaveAuthorConfigFile_disownCode() {
+        config.setAuthorList(new ArrayList<>(Arrays.asList(FAKE_AUTHOR)));
+        AuthorConfiguration.setHasAuthorConfigFile(true);
         FileResult fileResult = getFileResult("annotationTest.java");
         assertFileAnalysisCorrectness(fileResult, Arrays.asList(EXPECTED_LINE_AUTHORS_DISOWN_CODE_TEST));
     }

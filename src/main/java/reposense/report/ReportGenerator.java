@@ -343,8 +343,8 @@ public class ReportGenerator {
         updateAuthorList(config);
         updateIgnoreCommitList(config);
 
-        CommitContributionSummary commitSummary = CommitsReporter.generateCommitSummary(config);
         AuthorshipSummary authorshipSummary = AuthorshipReporter.generateAuthorshipSummary(config);
+        CommitContributionSummary commitSummary = CommitsReporter.generateCommitSummary(config);
         List<Path> generatedFiles = generateIndividualRepoReport(repoReportDirectory, commitSummary, authorshipSummary);
         logger.info(String.format(MESSAGE_COMPLETE_ANALYSIS, config.getLocation(), config.getBranch()));
         return generatedFiles;
