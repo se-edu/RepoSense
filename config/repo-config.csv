@@ -1,4 +1,4 @@
-Repository's Location,Branch,File formats,Ignore Glob List,Ignore standalone config,Ignore Commits List,Ignore Authors List,Shallow Cloning
+Repository's Location,Branch,File formats,Ignore Glob List,Ignore standalone config,Ignore Commit List,Ignore Authors List,Shallow Cloning
 https://github.com/reposense/testrepo-Alpha.git,master,,,,2fb6b9b2dd9fa40bf0f9815da2cb0ae8731436c7;c5a6dc774e22099cd9ddeb0faff1e75f9cf4f151;cd7f610e0becbdf331d5231887d8010a689f87c7;768015345e70f06add2a8b7d1f901dc07bf70582,,
 https://github.com/reposense/testrepo-Beta.git,master,fxml,docs**,yes,,,
 https://github.com/reposense/testrepo-Beta.git,add-config-json,fxml,docs**,yes,,,
