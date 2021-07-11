@@ -66,10 +66,6 @@ public class ArgsParser {
     private static final String PROGRAM_DESCRIPTION =
             "RepoSense is a contribution analysis tool for Git repositories.";
     private static final String MESSAGE_HEADER_MUTEX = "mutual exclusive arguments";
-    private static final String MESSAGE_SINCE_DATE_LATER_THAN_UNTIL_DATE =
-            "\"Since Date\" cannot be later than \"Until Date\".";
-    private static final String MESSAGE_SINCE_DATE_LATER_THAN_TODAY_DATE =
-            "\"Since Date\" must not be later than today's date.";
     private static final String MESSAGE_HAVE_SINCE_DATE_UNTIL_DATE_AND_PERIOD =
             "\"Since Date\", \"Until Date\", and \"Period\" cannot be applied together.";
     private static final String MESSAGE_USING_DEFAULT_CONFIG_PATH =
@@ -243,6 +239,9 @@ public class ArgsParser {
             Namespace results = parser.parseArgs(args);
             Date sinceDate;
             Date untilDate;
+            Optional<Date> tempSinceDate = Optional.empty();
+            Optional<Date> tempUntilDate = Optional.empty();
+            Optional<Integer> tempPeriod = Optional.empty();
 
             Path configFolderPath = results.get(CONFIG_FLAGS[0]);
             Path reportFolderPath = results.get(VIEW_FLAGS[0]);
@@ -274,30 +273,67 @@ public class ArgsParser {
                 }
             }
 
-            boolean isSinceDateProvided = cliSinceDate.isPresent();
-            boolean isUntilDateProvided = cliUntilDate.isPresent();
-            boolean isPeriodProvided = cliPeriod.isPresent();
-            if (isSinceDateProvided && isUntilDateProvided && isPeriodProvided) {
+            // CLI arguments are treated with the highest priority and will throw an Exception if a conflict occurs
+            if (cliSinceDate.isPresent() && cliUntilDate.isPresent() && cliPeriod.isPresent()) {
                 throw new ParseException(MESSAGE_HAVE_SINCE_DATE_UNTIL_DATE_AND_PERIOD);
             }
             int numCloningThreads = results.get(CLONING_THREADS_FLAG[0]);
             int numAnalysisThreads = results.get(ANALYSIS_THREADS_FLAG[0]);
 
+            boolean isSinceDateProvided = cliSinceDate.isPresent() || reportConfig.getSinceDate().isPresent();
+            boolean isUntilDateProvided = cliUntilDate.isPresent() || reportConfig.getUntilDate().isPresent();
+            boolean isPeriodProvided = cliPeriod.isPresent() || reportConfig.getPeriod().isPresent();
+
+            // Report config is treated with less priority and will be ignored if there is a conflict
+            if (isSinceDateProvided && isUntilDateProvided && isPeriodProvided) {
+                logger.warning(MESSAGE_IGNORING_REPORT_SINCE_DATE_UNTIL_DATE_AND_PERIOD);
+                reportConfig.ignoreSinceUntilDateAndPeriod();
+                isSinceDateProvided = cliSinceDate.isPresent();
+                isUntilDateProvided = cliUntilDate.isPresent();
+                isPeriodProvided = cliPeriod.isPresent();
+            }
+            if (cliSinceDate.isPresent() && reportConfig.getSinceDate().isPresent()) {
+                logger.warning(MESSAGE_IGNORING_REPORT_CONFIG_SINCE_DATE);
+            }
+            if (cliUntilDate.isPresent() && reportConfig.getUntilDate().isPresent()) {
+                logger.warning(MESSAGE_IGNORING_REPORT_CONFIG_UNTIL_DATE);
+            }
+            if (cliPeriod.isPresent() && reportConfig.getPeriod().isPresent()) {
+                logger.warning(MESSAGE_IGNORING_REPORT_CONFIG_PERIOD);
+            }
+
+            // Set the values to those provided by the CLI arguments first, otherwise take from report config
+            if (cliPeriod.isPresent()) {
+                tempPeriod = cliPeriod;
+            } else if (reportConfig.getPeriod().isPresent()) {
+                tempPeriod = reportConfig.getPeriod();
+            }
+            if (cliSinceDate.isPresent()) {
+                tempSinceDate = cliSinceDate;
+            } else if (reportConfig.getSinceDate().isPresent()) {
+                tempSinceDate = reportConfig.getSinceDate();
+            }
+            if (cliUntilDate.isPresent()) {
+                tempUntilDate = cliUntilDate;
+            } else if (reportConfig.getUntilDate().isPresent()) {
+                tempUntilDate = reportConfig.getUntilDate();
+            }
+
             Date currentDate = TimeUtil.getCurrentDate(zoneId);
 
             if (isSinceDateProvided) {
-                sinceDate = TimeUtil.getZonedSinceDate(cliSinceDate.get(), zoneId);
+                sinceDate = TimeUtil.getZonedSinceDate(tempSinceDate.get(), zoneId);
             } else {
                 sinceDate = isPeriodProvided
-                        ? TimeUtil.getDateMinusNDays(cliUntilDate, zoneId, cliPeriod.get())
-                        : TimeUtil.getDateMinusAMonth(cliUntilDate, zoneId);
+                        ? TimeUtil.getDateMinusNDays(tempUntilDate, zoneId, tempPeriod.get())
+                        : TimeUtil.getDateMinusAMonth(tempUntilDate, zoneId);
             }
 
             if (isUntilDateProvided) {
-                untilDate = TimeUtil.getZonedUntilDate(cliUntilDate.get(), zoneId);
+                untilDate = TimeUtil.getZonedUntilDate(tempUntilDate.get(), zoneId);
             } else {
                 untilDate = (isSinceDateProvided && isPeriodProvided)
-                        ? TimeUtil.getDatePlusNDays(cliSinceDate, zoneId, cliPeriod.get())
+                        ? TimeUtil.getDatePlusNDays(tempSinceDate, zoneId, tempPeriod.get())
                         : currentDate;
             }
 

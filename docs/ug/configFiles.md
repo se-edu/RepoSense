@@ -93,10 +93,20 @@ e.g.: `example.java` in `example-repo` can either be in the `test` group or the 
 
 ## `report-config.json`
 
-You can optionally use `report-config.json` to customize report generation by providing the following information. ([example](report-config.csv))
+You can optionally use `report-config.json` to customize report generation by providing the following information. ([example](report-config.json))
 
 **Fields to provide**:
 * `title`: Title of the generated report, which is also the title of the deployed dashboard. Default: "RepoSense Report"
+* `sinceDate`: The first day of the period to be analyzed, in the format `DD/MM/YYYY`. Default: One month before the current date.
+* `untilDate`: The last day of the period to be analyzed, in the format `DD/MM/YYYY`. Default: Current date.
+* `period`: The period of the analysis window, in the format `nd` (for `n` days) or `nw` (for `n` weeks). It is used to calculate end date if only start date is specified, or calculate end date if only start date is specified.
+
+<box type="info" seamless>
+
+* `sinceDate`, `untilDate` and `period` cannot be declared together and will be ignored if all 3 configuration settings are present in the report configuration.
+* CLI arguments takes precedence over the values provided in this report configuration. If the same configuration is set as a CLI argument as well as in the report configuration, the value in the report configuration is ignored.
+* Likewise, if there is a conflict, such as `sinceDate`, `untilDate` and `period` being declared together even though some of them were declared in the report configuration, only the CLI arguments will be taken and the report configuration will be completely ignored.
+</box>
 
 <!-- ==================================================================================================== -->
 

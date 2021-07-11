@@ -49,6 +49,13 @@ public class ArgsParserTest {
             CONFIG_FOLDER_ABSOLUTE.resolve(AuthorConfigCsvParser.AUTHOR_CONFIG_FILENAME);
     private static final String NONEXISTENT_DIRECTORY = "some_non_existent_dir/";
 
+    private static final Path REPORT_CONFIG_FOLDER_ABSOLUTE_ONE = loadResource(ArgsParserTest.class,
+            "report_config_test/one");
+    private static final Path REPORT_CONFIG_FOLDER_ABSOLUTE_TWO = loadResource(ArgsParserTest.class,
+            "report_config_test/two");
+    private static final Path REPORT_CONFIG_FOLDER_ABSOLUTE_THREE = loadResource(ArgsParserTest.class,
+            "report_config_test/three");
+
     private static final InputBuilder DEFAULT_INPUT_BUILDER = new InputBuilder();
 
     private static final String TEST_REPO_REPOSENSE = "https://github.com/reposense/RepoSense.git";
@@ -734,6 +741,160 @@ public class ArgsParserTest {
         expectedSinceDate = TestUtil.getDate(2017, Calendar.JULY, 1, expectedSinceTime);
         expectedUntilTime = new int[]{7, 59, 59};
         expectedUntilDate = TestUtil.getDate(2017, Calendar.DECEMBER, 1, expectedUntilTime);
+
+        Assert.assertTrue(cliArguments instanceof ConfigCliArguments);
+        Assert.assertEquals(expectedSinceDate, cliArguments.getSinceDate());
+        Assert.assertEquals(expectedUntilDate, cliArguments.getUntilDate());
+    }
+
+    @Test
+    public void parse_reportConfigFolderOnly_success() throws Exception {
+        String input = new InputBuilder()
+                .addConfig(REPORT_CONFIG_FOLDER_ABSOLUTE_ONE)
+                .addTimezone(DEFAULT_TIMEZONE)
+                .build();
+        CliArguments cliArguments = ArgsParser.parse(translateCommandline(input));
+        Date expectedSinceDate = TestUtil.getSinceDate(2019, Calendar.MAY, 20);
+        Date expectedUntilDate = TestUtil.getUntilDate(2020, Calendar.NOVEMBER, 20);
+
+        Assert.assertTrue(cliArguments instanceof ConfigCliArguments);
+        Assert.assertEquals(expectedSinceDate, cliArguments.getSinceDate());
+        Assert.assertEquals(expectedUntilDate, cliArguments.getUntilDate());
+
+        input = new InputBuilder()
+                .addConfig(REPORT_CONFIG_FOLDER_ABSOLUTE_TWO)
+                .addTimezone(DEFAULT_TIMEZONE)
+                .build();
+        cliArguments = ArgsParser.parse(translateCommandline(input));
+        expectedSinceDate = TestUtil.getSinceDate(2019, Calendar.MAY, 20);
+        expectedUntilDate = TestUtil.getUntilDate(2019, Calendar.JUNE, 9);
+
+        Assert.assertTrue(cliArguments instanceof ConfigCliArguments);
+        Assert.assertEquals(expectedSinceDate, cliArguments.getSinceDate());
+        Assert.assertEquals(expectedUntilDate, cliArguments.getUntilDate());
+
+        input = new InputBuilder()
+                .addConfig(REPORT_CONFIG_FOLDER_ABSOLUTE_THREE)
+                .addTimezone(DEFAULT_TIMEZONE)
+                .build();
+        cliArguments = ArgsParser.parse(translateCommandline(input));
+        expectedSinceDate = TestUtil.getSinceDate(2020, Calendar.OCTOBER, 20);
+        expectedUntilDate = TestUtil.getUntilDate(2020, Calendar.NOVEMBER, 20);
+
+        Assert.assertTrue(cliArguments instanceof ConfigCliArguments);
+        Assert.assertEquals(expectedSinceDate, cliArguments.getSinceDate());
+        Assert.assertEquals(expectedUntilDate, cliArguments.getUntilDate());
+    }
+
+    @Test
+    public void parse_reportConfigAndCliNonConflict_success() throws Exception {
+        String input = new InputBuilder()
+                .addConfig(REPORT_CONFIG_FOLDER_ABSOLUTE_TWO)
+                .addTimezone(DEFAULT_TIMEZONE)
+                .addPeriod("5d")
+                .build();
+        CliArguments cliArguments = ArgsParser.parse(translateCommandline(input));
+        Date expectedSinceDate = TestUtil.getSinceDate(2019, Calendar.MAY, 20);
+        Date expectedUntilDate = TestUtil.getUntilDate(2019, Calendar.MAY, 24);
+
+        Assert.assertTrue(cliArguments instanceof ConfigCliArguments);
+        Assert.assertEquals(expectedSinceDate, cliArguments.getSinceDate());
+        Assert.assertEquals(expectedUntilDate, cliArguments.getUntilDate());
+        input = new InputBuilder()
+                .addConfig(REPORT_CONFIG_FOLDER_ABSOLUTE_THREE)
+                .addTimezone(DEFAULT_TIMEZONE)
+                .addSinceDate("30/07/2018")
+                .build();
+        cliArguments = ArgsParser.parse(translateCommandline(input));
+        expectedSinceDate = TestUtil.getSinceDate(2018, Calendar.JULY, 30);
+        expectedUntilDate = TestUtil.getUntilDate(2020, Calendar.NOVEMBER, 20);
+
+        Assert.assertTrue(cliArguments instanceof ConfigCliArguments);
+        Assert.assertEquals(expectedSinceDate, cliArguments.getSinceDate());
+        Assert.assertEquals(expectedUntilDate, cliArguments.getUntilDate());
+    }
+
+    @Test
+    public void parse_reportConfigAndCliConflict_ignoreReportConfig() throws Exception {
+        String input = new InputBuilder()
+                .addConfig(REPORT_CONFIG_FOLDER_ABSOLUTE_ONE)
+                .addTimezone(DEFAULT_TIMEZONE)
+                .addSinceDate("16/06/2018")
+                .build();
+        CliArguments cliArguments = ArgsParser.parse(translateCommandline(input));
+        Date expectedSinceDate = TestUtil.getSinceDate(2018, Calendar.JUNE, 16);
+        Date expectedUntilDate = TestUtil.getUntilDate(2020, Calendar.NOVEMBER, 20);
+
+        Assert.assertTrue(cliArguments instanceof ConfigCliArguments);
+        Assert.assertEquals(expectedSinceDate, cliArguments.getSinceDate());
+        Assert.assertEquals(expectedUntilDate, cliArguments.getUntilDate());
+
+        input = new InputBuilder()
+                .addConfig(REPORT_CONFIG_FOLDER_ABSOLUTE_TWO)
+                .addTimezone(DEFAULT_TIMEZONE)
+                .addPeriod("2w")
+                .build();
+        cliArguments = ArgsParser.parse(translateCommandline(input));
+        expectedSinceDate = TestUtil.getSinceDate(2019, Calendar.MAY, 20);
+        expectedUntilDate = TestUtil.getUntilDate(2019, Calendar.JUNE, 2);
+
+        Assert.assertTrue(cliArguments instanceof ConfigCliArguments);
+        Assert.assertEquals(expectedSinceDate, cliArguments.getSinceDate());
+        Assert.assertEquals(expectedUntilDate, cliArguments.getUntilDate());
+
+        input = new InputBuilder()
+                .addConfig(REPORT_CONFIG_FOLDER_ABSOLUTE_THREE)
+                .addTimezone(DEFAULT_TIMEZONE)
+                .addSinceDate("08/05/2018")
+                .addUntilDate("07/08/2018")
+                .build();
+        cliArguments = ArgsParser.parse(translateCommandline(input));
+        expectedSinceDate = TestUtil.getSinceDate(2018, Calendar.MAY, 8);
+        expectedUntilDate = TestUtil.getUntilDate(2018, Calendar.AUGUST, 7);
+
+        Assert.assertTrue(cliArguments instanceof ConfigCliArguments);
+        Assert.assertEquals(expectedSinceDate, cliArguments.getSinceDate());
+        Assert.assertEquals(expectedUntilDate, cliArguments.getUntilDate());
+    }
+
+    @Test
+    public void parse_reportConfigAndCliHaveSinceUntilDateAndPeriod_ignoreReportConfig() throws Exception {
+        String input = new InputBuilder()
+                .addConfig(REPORT_CONFIG_FOLDER_ABSOLUTE_ONE)
+                .addTimezone(DEFAULT_TIMEZONE)
+                .addPeriod("2w")
+                .addUntilDate("12/01/2019")
+                .build();
+        CliArguments cliArguments = ArgsParser.parse(translateCommandline(input));
+        Date expectedSinceDate = TestUtil.getSinceDate(2018, Calendar.DECEMBER, 30);
+        Date expectedUntilDate = TestUtil.getUntilDate(2019, Calendar.JANUARY, 12);
+
+        Assert.assertTrue(cliArguments instanceof ConfigCliArguments);
+        Assert.assertEquals(expectedSinceDate, cliArguments.getSinceDate());
+        Assert.assertEquals(expectedUntilDate, cliArguments.getUntilDate());
+
+        input = new InputBuilder()
+                .addConfig(REPORT_CONFIG_FOLDER_ABSOLUTE_TWO)
+                .addTimezone(DEFAULT_TIMEZONE)
+                .addUntilDate("23/04/2019")
+                .build();
+        cliArguments = ArgsParser.parse(translateCommandline(input));
+        expectedSinceDate = TestUtil.getSinceDate(2019, Calendar.MARCH, 23);
+        expectedUntilDate = TestUtil.getUntilDate(2019, Calendar.APRIL, 23);
+
+        Assert.assertTrue(cliArguments instanceof ConfigCliArguments);
+        Assert.assertEquals(expectedSinceDate, cliArguments.getSinceDate());
+        Assert.assertEquals(expectedUntilDate, cliArguments.getUntilDate());
+
+        input = new InputBuilder()
+                .addConfig(REPORT_CONFIG_FOLDER_ABSOLUTE_THREE)
+                .addTimezone(DEFAULT_TIMEZONE)
+                .addPeriod("5d")
+                .addUntilDate("16/02/2019")
+                .build();
+        cliArguments = ArgsParser.parse(translateCommandline(input));
+        expectedSinceDate = TestUtil.getSinceDate(2019, Calendar.FEBRUARY, 12);
+        expectedUntilDate = TestUtil.getUntilDate(2019, Calendar.FEBRUARY, 16);
 
         Assert.assertTrue(cliArguments instanceof ConfigCliArguments);
         Assert.assertEquals(expectedSinceDate, cliArguments.getSinceDate());
