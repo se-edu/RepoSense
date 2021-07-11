@@ -2,6 +2,7 @@ package reposense.git;
 
 import java.io.IOException;
 import java.lang.reflect.Method;
+import java.nio.file.Paths;
 import java.util.Arrays;
 import java.util.List;
 
@@ -86,7 +87,7 @@ public class GitLsTreeTest extends GitTestTemplate {
      * Windows.
      */
     private void validateFilePaths(RepoConfiguration config) throws IOException, InvalidFilePathException {
-        GitClone.cloneBare(config, FileUtil.getBareRepoFolderName(config));
+        GitClone.cloneBare(config, Paths.get("."), FileUtil.getBareRepoPath(config).toString());
         GitLsTree.validateFilePaths(config, FileUtil.getBareRepoPath(config));
     }
 }

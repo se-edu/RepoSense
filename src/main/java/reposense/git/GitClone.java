@@ -97,7 +97,7 @@ public class GitClone {
      */
     public static void clone(RepoConfiguration config) throws GitCloneException {
         try {
-            Path rootPath = Paths.get(FileUtil.REPOS_ADDRESS, config.getRepoFolderName());
+            Path rootPath = FileUtil.getRepoParentFolder(config);
             Path repoPath = Paths.get(rootPath.toString(), config.getRepoName());
 
             if (!SystemUtil.isTestEnvironment()) {
@@ -107,9 +107,8 @@ public class GitClone {
             } else {
                 logger.info("Cloning from " + config.getLocation() + "...");
                 Files.createDirectories(rootPath);
-                String command = String.format("git clone %s %s", addQuote(config.getLocation().toString()),
-                        config.getRepoName());
-                runCommand(rootPath, command);
+                String command = getCloneCommand(config, repoPath.toString());
+                runCommand(Paths.get("."), command);
 
                 logger.info("Cloning completed!");
             }
@@ -139,18 +138,16 @@ public class GitClone {
      * Clones a bare repo specified in {@code config} into the folder {@code outputFolderName}.
      * @throws IOException if it fails to delete a directory.
      */
-    public static void cloneBare(RepoConfiguration config, String outputFolderName) throws IOException {
-        Path rootPath = Paths.get(FileUtil.REPOS_ADDRESS, config.getRepoFolderName());
-        Path outputFolderPath = Paths.get(rootPath.toString(), outputFolderName);
-
+    public static void cloneBare(RepoConfiguration config, Path rootPath,
+            String outputFolderName) throws IOException {
+        Path outputFolderPath = Paths.get(outputFolderName);
         if (!SystemUtil.isTestEnvironment()) {
-            FileUtil.deleteDirectory(outputFolderPath.toString());
-            Files.createDirectories(rootPath);
+            FileUtil.deleteDirectory(outputFolderName);
+            FileUtil.createDirectory(outputFolderPath);
         } else if (SystemUtil.isTestEnvironment() && Files.exists(outputFolderPath)) {
             return;
         }
-
-        String command = getCloneBareCommand(config, outputFolderName);
+        String command = getCloneBareCommand(config, addQuote(outputFolderName));
         runCommand(rootPath, command);
     }
 
@@ -186,11 +183,33 @@ public class GitClone {
     }
 
     /**
+     * Constructs the command to clone a repo specified in the {@code config}
+     * into the folder {@code outputFolderName}.
+     */
+    private static String getCloneCommand(RepoConfiguration config, String outputFolderName) {
+        return "git clone " + addQuote(config.getLocation().toString()) + " "
+                + outputFolderName;
+    }
+
+    /**
+     * Constructs the command to clone a repo specified in the {@code config}
+     * into the folder {@code outputFolderName} and subsequently branches to {@code branch}.
+     */
+    private static String getCloneAndBranchCommand(RepoConfiguration config, String branch, String outputFolderName) {
+        return "git clone " + addQuote(config.getLocation().toString()) + " "
+                + "--branch " + branch + " "
+                + outputFolderName;
+    }
+
+    /**
      * Constructs the command to clone a bare repo specified in the {@code config}
      * into the folder {@code outputFolderName}.
      */
     private static String getCloneBareCommand(RepoConfiguration config, String outputFolderName) {
-        return "git clone --bare " + config.getLocation() + " " + outputFolderName;
+        String output = "git clone --bare "
+                + addQuote(config.getLocation().toString()) + " "
+                + outputFolderName;
+        return output;
     }
 
     /**
@@ -199,8 +218,10 @@ public class GitClone {
      */
     private static String getCloneShallowBareCommand(RepoConfiguration config,
                                                     String outputFolderName, Date shallowSinceDate) {
-        return "git clone --bare --shallow-since=\"" + shallowSinceDate + "\" "
-                + config.getLocation() + " " + outputFolderName;
+        return "git clone --bare --shallow-since="
+                + addQuote(shallowSinceDate.toString()) + " "
+                + addQuote(config.getLocation().toString()) + " "
+                + outputFolderName;
     }
 
     /**
@@ -208,7 +229,9 @@ public class GitClone {
      * into the folder {@code outputFolderName}.
      */
     private static String getClonePartialBareCommand(RepoConfiguration config, String outputFolderName) {
-        return "git clone --bare --filter=blob:none " + config.getLocation() + " " + outputFolderName;
+        return "git clone --bare --filter=blob:none "
+                + addQuote(config.getLocation().toString()) + " "
+                + outputFolderName;
     }
 
     /**
@@ -217,7 +240,9 @@ public class GitClone {
      */
     private static String getCloneShallowPartialBareCommand(RepoConfiguration config,
                                                             String outputFolderName, Date shallowSinceDate) {
-        return "git clone --bare --filter=blob:none --shallow-since=\"" + shallowSinceDate + "\" "
-                + config.getLocation() + " " + outputFolderName;
+        return "git clone --bare --filter=blob:none --shallow-since="
+                + addQuote(shallowSinceDate.toString()) + " "
+                + addQuote(config.getLocation().toString()) + " "
+                + outputFolderName;
     }
 }
