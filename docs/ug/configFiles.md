@@ -1,10 +1,10 @@
-<variable name="title">Appendix: Config files format</variable>
+{% set title = "Appendix: Config files format" %}
 <frontmatter>
   title: "{{ title | safe }}"
   pageNav: 3
 </frontmatter>
 
-<variable name="mandatory"><span class="badge badge-danger">mandatory</span></variable>
+{% set mandatory %}<span class="badge badge-danger">mandatory</span>{% endset %}
 
 <h1 class="display-4"><md>{{ title }}</md></h1>
 
@@ -15,7 +15,7 @@ Given below are the details of the various config files used by RepoSense.
 
 <box type="info" seamless>
 
-**RepoSense ignores the order of column headers in the CSV config files. However, the spelling of the column headers must match the specified headers exactly, or the column would be ignored by RepoSense.**  
+**RepoSense ignores the order of column headers in the CSV config files. However, the spelling of the column headers must match the specified headers exactly, or the column would be ignored by RepoSense.**
 </box>
 
 <box type="info" seamless>
@@ -93,7 +93,7 @@ e.g.: `example.java` in `example-repo` can either be in the `test` group or the 
 
 ## `report-config.json`
 
-You can optionally use `report-config.json` to customize report generation by providing the following information. ([example](report-config.csv))
+You can optionally use `report-config.json` to customize report generation by providing the following information. ([example](report-config.json))
 
 **Fields to provide**:
 * `title`: Title of the generated report, which is also the title of the deployed dashboard. Default: "RepoSense Report"

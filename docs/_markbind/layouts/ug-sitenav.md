@@ -16,12 +16,7 @@
   {level: 2, name: "Troubleshooting", link: "ug/troubleshooting.html"}
 ]
 %}
-
-<span class="lead">****USER GUIDE****</span>
-
-<navigation>
-
 {% from "scripts/macros.njk" import show_sitenav_items with context %}
-
+<site-nav>
 {{ show_sitenav_items(ug_sitenav_items) }}
-</navigation>
+</site-nav>

@@ -1,6 +1,6 @@
-<variable name="title">Appendix: `run.sh` format</variable>
+{% set title %}Appendix: run.sh format{% endset %}
 <frontmatter>
-  title: "Appendix: `run.sh` format"
+  title "{{ title | safe }}"
 </frontmatter>
 
 {% from 'scripts/macros.njk' import embed, step with context %}

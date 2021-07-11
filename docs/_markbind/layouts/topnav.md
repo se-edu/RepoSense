@@ -1,6 +1,5 @@
 {% macro showTopNav() %}
-<header>
-<navbar type="dark" placement="top" type="inverse">
+<navbar type="dark">
   <a slot="brand" href="{{baseUrl}}/index.html" title="Home" class="navbar-brand"><img width="30px" src="{{baseUrl}}/favicon.ico"/></a>
   <li><a href="{{baseUrl}}/index.html" class="nav-link">HOME</a></li>
   <li><a href="{{baseUrl}}/showcase.html" class="nav-link">SHOWCASE</a></li>
@@ -16,6 +15,5 @@
     </form>
   </li>
 </navbar>
-</header>
 {% endmacro %}
 {{ showTopNav() }}

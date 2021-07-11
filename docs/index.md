@@ -1,4 +1,4 @@
-<variable name="title">Home</variable>
+{% set title = "Home" %}
 <frontmatter>
   title: "{{ title | safe }}"
 </frontmatter>
@@ -90,7 +90,7 @@ Deploy previews are powered by Netlify and Surge.
 
 ****USER GUIDE****
 
-{% from "_markbind/navigation/ugSiteNav.md" import ug_sitenav_items %}
+{% from "_markbind/layouts/ug-sitenav.md" import ug_sitenav_items %}
 {{ show_sitenav_items(ug_sitenav_items, is_flat=true) }}
 
 
@@ -100,7 +100,7 @@ Deploy previews are powered by Netlify and Surge.
 
 ****DEVELOPER GUIDE****
 
-{% from "_markbind/navigation/dgSiteNav.md" import dg_sitenav_items %}
+{% from "_markbind/layouts/dg-sitenav.md" import dg_sitenav_items %}
 {{ show_sitenav_items(dg_sitenav_items, is_flat=true) }}
 
 

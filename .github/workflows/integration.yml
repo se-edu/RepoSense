@@ -79,7 +79,7 @@ jobs:
       if: ${{ success() && github.event_name == 'pull_request' && matrix.os == 'ubuntu-20.04' }}
       run: |
         git fetch --all && git config --global user.email "-" && git config --global user.name "-" && ./gradlew run -Dargs="--since d1"
-        npm install -g markbind-cli@2.18.1
+        npm install -g markbind-cli
         (cd docs && markbind build)
 
     - name: Save PR number and HEAD commit (pull request)

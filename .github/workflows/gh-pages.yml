@@ -32,7 +32,7 @@ jobs:
           ${{ runner.os }}-node-
 
     - name: Install MarkBind CLI
-      run: npm i -g markbind-cli@2.18.1
+      run: npm i -g markbind-cli
 
     - name: Build MarkBind website
       run: cd docs && markbind build --baseUrl /RepoSense

@@ -1,4 +1,4 @@
-<variable name="title">Using reports</variable>
+{% set title = "Using reports" %}
 <frontmatter>
   title: "{{ title | safe }}"
   pageNav: 3
@@ -132,7 +132,7 @@ The `Code panel` allows users to see the code attributed to a specific author. C
 * The Code panel shows the files that contain the author's contributions, sorted by the number of lines written.
 * Select the radio button to enable one of the following 2 filters. Note that only 1 of the 2 filters is active at any time.
     * Type file path glob in glob filter to include files matching the glob expression.
-    * Select the checkboxes to include files of preferred file extensions. 
+    * Select the checkboxes to include files of preferred file extensions.
     The number right beside the file extension shows the total number of lines written by the author in such file extension files. In contrast, the number inside the parenthesis indicates the number of non-blank lines written by the author.
 * Clicking the file title toggles the file content.
 * Clicking the first icon beside the file title opens the history view of the file on GitHub.

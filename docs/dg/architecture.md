@@ -1,4 +1,4 @@
-<variable name="title">Architecture</variable>
+{% set title = "Architecture" %}
 <frontmatter>
   title: "{{ title | safe }}"
   pageNav: 3
@@ -68,9 +68,9 @@
  1. clones repositories using the `GitClone` API in a multi-threaded fashion.
     * By default, 4 threads are used for cloning; the number of threads can be specified using the CLI argument `--cloning-threads <threads>`.
  1. analyzes the repositories using the `CommitReporter` and `AuthorshipReporter` in a multi-threaded fashion.
-    * First, copies the template files into the designated output directory. 
+    * First, copies the template files into the designated output directory.
     * Then, uses `CommitReporter` and `AuthorshipReporter` to produce the commit and authorship summary, respectively.
-    * By default, the number of threads used for analysis is equal to the number of CPU cores available; the number of threads can be specified using the CLI argument `--analysis-threads <threads>`. 
+    * By default, the number of threads used for analysis is equal to the number of CPU cores available; the number of threads can be specified using the CLI argument `--analysis-threads <threads>`.
  1. generates the `JSON` files needed to generate the `HTML` report.
 
 <!-- ==================================================================================================== -->

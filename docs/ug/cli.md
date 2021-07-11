@@ -1,4 +1,4 @@
-<variable name="title">Appendix: CLI syntax reference</variable>
+{% set title = "Appendix: CLI syntax reference" %}
 <frontmatter>
   title: "{{ title | safe }}"
   pageNav: 3

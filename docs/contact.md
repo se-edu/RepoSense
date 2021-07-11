@@ -1,4 +1,4 @@
-<variable name="title">Contact us</variable>
+{% set title = "Contact us" %}
 <frontmatter>
   title: "{{ title | safe }}"
 </frontmatter>

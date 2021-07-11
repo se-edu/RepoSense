@@ -24,14 +24,13 @@
     {
       "glob": ["dg/*.+(md|mbd)"],
       "frontmatter": {
-        "siteNav": "dgSiteNav.md"
+        "layout": "dg-layout.md"
       }
     },
     {
       "glob": ["ug/*.+(md|mbd)"],
       "frontmatter": {
-        "header": "devSiteHeader.md",
-        "siteNav": "ugSiteNav.md"
+        "layout": "ug-layout.md"
       }
     }
   ],

@@ -1,4 +1,4 @@
-<variable name="title">Appendix: Style guides</variable>
+{% set title = "Appendix: Style guides" %}
 <frontmatter>
   title: "{{ title | safe }}"
 </frontmatter>
