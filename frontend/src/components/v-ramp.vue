@@ -1,6 +1,43 @@
-window.vRamp = {
+<template lang="pug">
+.ramp
+  template(v-if="tframe === 'commit'")
+    template(v-for="(slice, j) in user.commits")
+      a.ramp__slice(
+        draggable="false",
+        v-on:click="rampClick",
+        v-for="(commit, k) in slice.commitResults",
+        v-if="commit.insertions>0",
+        v-bind:href="getLink(user, commit)", target="_blank",
+        v-bind:title="getContributionMessage(slice, commit)",
+        v-bind:class="'ramp__slice--color' + getSliceColor(slice.date)",
+        v-bind:style="{\
+          zIndex: user.commits.length - j,\
+          borderLeftWidth: getWidth(commit) + 'em',\
+          right: ((getSlicePos(slice.date)\
+            + (getCommitPos(k, slice.commitResults.length))) * 100) + '%'\
+          }"
+      )
+
+  template(v-else)
+    a.ramp__slice(
+      draggable="false",
+      v-for="(slice, j) in user.commits",
+      v-if="slice.insertions > 0",
+      v-bind:title="getContributionMessage(slice)",
+      v-on:click="openTabZoom(user, slice, $event)",
+      v-bind:class="'ramp__slice--color' + getSliceColor(slice.date)",
+      v-bind:style="{\
+        zIndex: user.commits.length - j,\
+        borderLeftWidth: getWidth(slice) + 'em',\
+        right: (getSlicePos(tframe === 'day' ? slice.date : slice.endDate) * 100) + '%' \
+        }"
+    )
+</template>
+
+<script>
+export default {
+  name: 'v-ramp',
   props: ['groupby', 'user', 'tframe', 'avgsize', 'sdate', 'udate', 'mergegroup', 'fromramp', 'filtersearch'],
-  template: window.$('v_ramp').innerHTML,
   data() {
     return {
       rampSize: 0.01,
@@ -95,3 +132,48 @@ window.vRamp = {
     },
   },
 };
+</script>
+
+<!-- Add "scoped" attribute to limit CSS to this component only -->
+<style scoped lang="scss">
+@import '../styles/_colors.scss';
+
+/* Ramp */
+.ramp {
+  $height: 3rem;
+  background-color: mui-color('blue', '50');
+  font-size: 100%;
+  height: $height;
+  overflow: hidden;
+  position: relative;
+
+  &__slice {
+    border-left-color: rgba(0, 0, 0, 0);
+    border-left-style: solid;
+    display: block;
+    height: 0;
+    position: absolute;
+    width: 0;
+
+    &--color0 {
+      border-bottom: $height rgba(mui-color('orange'), .5) solid;
+    }
+
+    &--color1 {
+      border-bottom: $height rgba(mui-color('light-blue'), .5) solid;
+    }
+
+    &--color2 {
+      border-bottom: $height rgba(mui-color('green'), .5) solid;
+    }
+
+    &--color3 {
+      border-bottom: $height rgba(mui-color('indigo'), .5) solid;
+    }
+
+    &--color4 {
+      border-bottom: $height rgba(mui-color('pink'), .5) solid;
+    }
+  }
+}
+</style>

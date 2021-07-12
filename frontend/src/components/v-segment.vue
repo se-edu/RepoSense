@@ -1,3 +1,4 @@
+<template lang="pug">
 .segment(v-bind:class="{ untouched: !segment.authored, active: isOpen }")
   .closer(v-if="canOpen",
     v-on:click="toggleCode", ref="topButton")
@@ -21,3 +22,22 @@
       icon="chevron-circle-up",
       v-bind:title="'Click to hide code'"
     )
+</template>
+
+<script>
+export default {
+  name: 'v-segment',
+  props: ['segment', 'path'],
+  data() {
+    return {
+      isOpen: this.segment.authored || this.segment.lines.length < 5,
+      canOpen: !this.segment.authored && this.segment.lines.length > 4,
+    };
+  },
+  methods: {
+    toggleCode() {
+      this.isOpen = !this.isOpen;
+    },
+  },
+};
+</script>

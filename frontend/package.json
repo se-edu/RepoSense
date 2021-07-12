@@ -1,0 +1,66 @@
+{
+  "name": "reposense",
+  "version": "1.0.0",
+  "description": "[![Build Status](https://travis-ci.org/reposense/RepoSense.svg?branch=master)](https://travis-ci.org/reposense/RepoSense) [![Build status](https://ci.appveyor.com/api/projects/status/gsbkj5qby3pjd6nw/branch/master?svg=true)](https://ci.appveyor.com/project/eugenepeh/reposense/branch/master)",
+  "main": "index.js",
+  "directories": {
+    "doc": "docs"
+  },
+  "scripts": {
+    "serve": "vue-cli-service serve",
+    "serveOpen": "vue-cli-service serve --open",
+    "lint": "eslint src/**/*.{js,vue} && stylelint ./src/**/*.{vue,scss} && npm run puglint",
+    "lintfix": "eslint --fix src/**/*.{js,vue} cypress/tests/**/*.js && stylelint --fix ./src/**/*.{vue,scss}",
+    "puglint": "pug-lint-vue src",
+    "build": "vue-cli-service build",
+    "devbuild": "vue-cli-service build --mode development"
+  },
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/reposense/RepoSense.git"
+  },
+  "author": "",
+  "license": "ISC",
+  "bugs": {
+    "url": "https://github.com/reposense/RepoSense/issues"
+  },
+  "homepage": "https://github.com/reposense/RepoSense#readme",
+  "dependencies": {
+    "@fortawesome/fontawesome-svg-core": "^1.2.34",
+    "@fortawesome/free-brands-svg-icons": "^5.15.2",
+    "@fortawesome/free-solid-svg-icons": "^5.15.2",
+    "@fortawesome/vue-fontawesome": "^2.0.2",
+    "core-js": "^3.6.5",
+    "highlight.js": "^10.5.0",
+    "jszip": "^3.5.0",
+    "minimatch": "^3.0.4",
+    "pug-lint-vue": "^0.4.0",
+    "seedrandom": "^3.0.5",
+    "stylelint-config-standard": "^18.3.0",
+    "vue": "^2.6.11",
+    "vue-loading-overlay": "^3.4.2",
+    "vue-template-compiler": "^2.6.12",
+    "vuex": "^3.6.2"
+  },
+  "devDependencies": {
+    "@vue/cli-plugin-babel": "~4.5.0",
+    "@vue/cli-plugin-eslint": "~4.5.0",
+    "@vue/cli-service": "~4.5.0",
+    "@vue/compiler-sfc": "^3.0.0",
+    "babel-eslint": "^10.1.0",
+    "eslint": "^6.8.0",
+    "eslint-config-airbnb-base": "^13.0.0",
+    "eslint-plugin-import": "^2.13.0",
+    "eslint-plugin-vue": "^7.4.1",
+    "node-sass": "^6.0.1",
+    "pug": "^3.0.2",
+    "pug-plain-loader": "^1.1.0",
+    "sass": "^1.32.4",
+    "sass-loader": "^10.1.1",
+    "stylelint": "^13.13.1",
+    "stylelint-config-recommended-scss": "^4.2.0",
+    "stylelint-order": "^3.0.1",
+    "stylelint-scss": "^3.18.0",
+    "stylelint-webpack-plugin": "^2.1.1"
+  }
+}

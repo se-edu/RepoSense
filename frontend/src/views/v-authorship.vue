@@ -1,7 +1,148 @@
-// eslint-disable-next-line import/no-unresolved
-import minimatch from 'https://cdn.skypack.dev/minimatch@v3.0.4';
+<template lang="pug">
+#authorship
+  .panel-title
+    span Code Panel
+  .toolbar--multiline
+    a(
+      v-if="activeFilesCount < selectedFiles.length",
+      v-on:click="expandAll()"
+    ) show all file details
+    a(v-if="activeFilesCount > 0", v-on:click="collapseAll()") hide all file details
+  .panel-heading
+    a.group-name(
+      v-bind:href="info.location", target="_blank",
+      v-bind:title="'Click to open the repo'"
+    ) {{ info.repo }}
+    .author(v-if="!info.isMergeGroup")
+      span &#8627; &nbsp;
+      span {{ authorDisplayName }} ({{ info.author }})
+    .period
+      span &#8627; &nbsp;
+      span {{ info.minDate }} to {{ info.maxDate }}
+        |&nbsp;&nbsp; ({{ selectedFiles.length }} files changed)
+  .title
+    .contribution(v-if="isLoaded && files.length!=0")
+      .sorting.mui-form--inline
+        .mui-select.sort-by
+          select(v-model="filesSortType")
+            option(value="lineOfCode") LoC
+            option(value="path") Path
+            option(value="fileName") File Name
+            option(value="fileType") File Type
+          label sort by
+        .mui-select.sort-order
+          select(v-model="toReverseSortFiles")
+            option(v-bind:value='true') Descending
+            option(v-bind:value='false') Ascending
+          label order
+      .searchbox
+        input.radio-button--search(
+          type="radio",
+          value="search",
+          v-model="filterType",
+          v-on:change="indicateSearchBar(); updateSearchBarValue();"
+        )
+        .mui-form--inline
+          input#search(
+            type="search",
+            placeholder="Filter by glob",
+            ref="searchBar",
+            v-bind:value="searchBarValue",
+            v-on:focus="indicateSearchBar",
+            v-on:keyup.enter="updateSearchBarValue"
+          )
+          button#submit-button(
+            type="button",
+            v-on:click="indicateSearchBar(); updateSearchBarValue();"
+          ) Filter
+      .fileTypes
+        input.radio-button--checkbox(
+          type="radio",
+          value="checkboxes",
+          v-model="filterType",
+          v-on:change="indicateCheckBoxes"
+        )
+        .checkboxes.mui-form--inline(v-if="files.length > 0")
+          label(style='background-color: #000000; color: #ffffff')
+            input.mui-checkbox--fileType#all(type="checkbox", v-model="isSelectAllChecked")
+            span(v-bind:title="getTotalFileBlankLineInfo()")
+              span All&nbsp;
+              span {{ totalLineCount }}&nbsp;
+              span ({{ totalLineCount - totalBlankLineCount }})&nbsp;
+          template(v-for="fileType in Object.keys(fileTypeLinesObj)")
+            label(
+              v-bind:key="fileType",
+              v-bind:style="{\
+                'background-color': fileTypeColors[fileType],\
+                'color': getFontColor(fileTypeColors[fileType])\
+                }"
+            )
+              input.mui-checkbox--fileType(type="checkbox",
+                v-bind:id="fileType", v-bind:value="fileType",
+                v-on:change="indicateCheckBoxes", v-model="selectedFileTypes")
+              span(v-bind:title="getFileTypeBlankLineInfo(fileType)")
+                span {{ fileType }}&nbsp;{{ fileTypeLinesObj[fileType] }}&nbsp;
+                span ({{ fileTypeLinesObj[fileType] - fileTypeBlankLinesObj[fileType] }})&nbsp;
+          label.binary-fileType(v-if="binaryFilesCount > 0")
+            input.mui-checkbox--fileType(type="checkbox", v-model="isBinaryChecked")
+            span(
+              v-bind:title="binaryFilesCount + \
+              ' binary files (not included in total line count)'"
+            )
+              span {{ binaryFilesCount }} binary file(s)
 
-/* global Vuex getFontColor */
+  .files(v-if="isLoaded")
+    .empty(v-if="files.length === 0") nothing to see here :(
+    template(v-for="(file, i) in selectedFiles")
+      .file(v-bind:key="file.path")
+        .title
+          span.path(v-on:click="toggleFileActiveProperty(file)")
+            .tooltip
+              font-awesome-icon(icon="caret-down", fixed-width, v-show="file.active")
+              span.tooltip-text(v-show="file.active") Click to hide file details
+              font-awesome-icon(icon="caret-right", fixed-width, v-show="!file.active")
+              span.tooltip-text(v-show="!file.active") Click to show file details
+            span {{ i + 1 }}. &nbsp;&nbsp; {{ file.path }} &nbsp;
+          span.icons
+            a(
+              v-bind:href="getFileLink(file, 'commits')", target="_blank"
+            )
+              .tooltip
+                font-awesome-icon.button(icon="history")
+                span.tooltip-text Click to view the history view of file
+            a(
+              v-if='!file.isBinary',
+              v-bind:href="getFileLink(file, 'blame')", target="_blank",
+              title="click to view the blame view of file"
+            )
+              .tooltip
+                font-awesome-icon.button(icon="user-edit")
+                span.tooltip-text Click to view the blame view of file
+          span.fileTypeLabel(
+            v-if='!file.isBinary',
+            v-bind:style="{\
+              'background-color': fileTypeColors[file.fileType],\
+              'color': getFontColor(fileTypeColors[file.fileType])\
+              }"
+          ) {{ file.fileType }}&nbsp;{{ file.lineCount }}
+            |&nbsp;({{ file.lineCount - file.blankLineCount }})
+          span.fileTypeLabel.binary(v-if='file.isBinary') binary&nbsp;
+        pre.hljs.file-content(v-if="file.wasCodeLoaded && !file.isBinary", v-show="file.active")
+          template(v-for="segment in file.segments")
+            v-segment(v-bind:segment="segment", v-bind:path="file.path")
+        pre.file-content(v-if="file.isBinary", v-show="file.active")
+          .binary-segment
+            .indicator BIN
+            .bin-text Binary file not shown.
+</template>
+
+<script>
+import { mapState } from 'vuex';
+import minimatch from 'minimatch';
+import vSegment from '../components/v-segment.vue';
+
+const getFontColor = window.getFontColor;
+
 const filesSortDict = {
   lineOfCode: (file) => file.lineCount,
   path: (file) => file.path,
@@ -29,8 +170,14 @@ function authorshipInitialState() {
 
 const repoCache = [];
 
-window.vAuthorship = {
-  template: window.$('v_authorship').innerHTML,
+export default {
+  name: 'v-authorship',
+  components: {
+    vSegment,
+  },
+  emits: [
+      'deactivate-tab',
+  ],
   data() {
     return authorshipInitialState();
   },
@@ -458,7 +605,7 @@ window.vAuthorship = {
       return this.files.filter((file) => file.isBinary).length;
     },
 
-    ...Vuex.mapState({
+    ...mapState({
       fileTypeColors: 'fileTypeColors',
       info: 'tabAuthorshipInfo',
     }),
@@ -468,11 +615,200 @@ window.vAuthorship = {
     this.initiate();
   },
 
-  beforeDestroy() {
+  beforeUnmount() {
     this.removeAuthorshipHashes();
   },
-
-  components: {
-    vSegment: window.vSegment,
-  },
 };
+</script>
+
+<style lang="scss">
+@import '../styles/_colors.scss';
+
+/* Authorship */
+#tab-authorship {
+
+  .file-content {
+    background-color: mui-color('github', 'title-background');
+    border: solid mui-color('github', 'border');
+    border-radius: 0 0 4px 4px;
+    border-width: 0 1px 1px 1px;
+  }
+
+  .title {
+    .contribution {
+      .radio-button--search {
+        float: left;
+        margin: 1.75rem 2.0rem 0 0;
+      }
+
+      .radio-button--checkbox {
+        float: left;
+        margin: 0 2.0rem 0 0;
+        vertical-align: middle;
+      }
+
+      #search {
+        @include medium-font;
+        margin-top: 1.25rem;
+        padding: .5rem 1.0rem .25rem 1.0rem;
+        width: 30%;
+      }
+
+      #submit-button {
+        @include medium-font;
+        background-color: mui-color('blue');
+        color: mui-color('white');
+        margin: 1.0rem 0 0 .25rem;
+        padding: .5rem 1.0rem .25rem 1.0rem;
+      }
+
+      .searchbox {
+        margin-bottom: 1em;
+      }
+
+      .select {
+        font-weight: bold;
+      }
+
+      .loc {
+        font-weight: bolder;
+      }
+
+      .mui-checkbox--fileType {
+        vertical-align: middle;
+      }
+
+      .binary-fileType {
+        background-color: mui-color('white');
+        color: mui-color('grey', '800');
+        float: right;
+      }
+    }
+  }
+
+  .files {
+    clear: left;
+
+    .file {
+      pre {
+        display: grid;
+        // GitHub's font family and font size
+        font-family: SFMono-Regular, Consolas, Liberation Mono, Menlo, monospace;
+        font-size: 12px;
+        margin-top: 0;
+
+        .hljs {
+          // overwrite hljs library
+          display: inherit;
+          padding: 0;
+          white-space: pre-wrap;
+        }
+      }
+    }
+
+    .title {
+      background-color: mui-color('github', 'title-background');
+      border: 1px solid mui-color('github', 'border');
+      border-radius: 4px 4px 0 0;
+      font-size: medium;
+      font-weight: bold;
+      margin-top: 1rem;
+      padding: .3em .5em;
+
+      .path {
+        cursor: pointer;
+        overflow-wrap: break-word;
+      }
+
+      .loc {
+        color: mui-color('grey');
+      }
+
+      .button {
+        color: mui-color('grey');
+        margin-left: .5rem;
+        text-decoration: none;
+      }
+
+      .icons {
+        margin-right: 8px;
+        vertical-align: middle;
+      }
+    }
+
+    .binary-segment {
+      background-color: mui-color('white');
+
+      .indicator {
+        float: left;
+        font-weight: bold;
+        padding-left: 1rem;
+      }
+
+      .bin-text {
+        color: mui-color('grey', '800');
+        padding-left: 4rem;
+      }
+    }
+
+    .segment {
+      border-left: .25rem solid mui-color('green');
+      .code {
+        background-color: mui-color('github', 'authored-code-background');
+        padding-left: 1rem;
+      }
+      .line-number {
+        color: mui-color('grey');
+        float: left;
+        // Not allowing user to select text
+        -webkit-touch-callout: none; /* iOS Safari */
+        -webkit-user-select: none; /* Safari */
+        -khtml-user-select: none; /* Konqueror HTML */
+        -moz-user-select: none; /* Firefox */
+        -ms-user-select: none; /* Internet Explorer/Edge */
+        user-select: none; /* Non-prefixed version, currently supported by Chrome and Opera */
+        width: 2rem;
+        // overwrite all hljs colours
+        [class^='hljs'] {
+          color: mui-color('grey');
+        }
+      }
+      .line-content {
+        padding-left: 2rem;
+        word-break: break-word;
+      }
+      &.untouched {
+        $grey: mui-color('grey', '400');
+        border-left: .25rem solid $grey;
+        height: 20px; /* height of a single line of code */
+        position: relative;
+        &.active {
+          height: auto;
+          .code {
+            background-color: mui-color('white');
+          }
+        }
+        .closer {
+          cursor: pointer;
+          // custom margin for position of toggle icon
+          margin: .2rem 0 0 -.45rem;
+          position: absolute;
+          &.bottom {
+            //custom margin for position of toggle icon at the bottom of segment
+            margin: -1.05rem 0 0 -.45rem;
+          }
+          .icon {
+            background-color: mui-color('white');
+            color: mui-color('grey');
+            width: .75em;
+          }
+        }
+      }
+    }
+  }
+
+  .empty {
+    text-align: center;
+  }
+}
+</style>

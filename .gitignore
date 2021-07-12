@@ -1,4 +1,6 @@
 .idea/
+.vs/
+
 *.class
 *.iml
 /target/

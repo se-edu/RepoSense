@@ -2,8 +2,14 @@
     "env": {
         "browser": true
     },
-    "extends": "airbnb-base",
+    "extends": [
+        "airbnb-base",
+        // "plugin:vue/base"
+        "plugin:vue/recommended"
+    ],
     "rules": {
+        "vue/component-definition-name-casing": ["error", "kebab-case"],
+        "vue/order-in-components": 0,  // Should remove eventually
         "no-param-reassign": 0,
         "arrow-parens": ["error", "always"],
         "indent": ["error", 2, {
@@ -14,8 +20,11 @@
                 "ConditionalExpression"
             ]
         }],
+        "prefer-destructuring": 0,
+        // "sort-imports": ["error", { "ignoreDeclarationSort": true }],
         "func-names": ["error", "as-needed"],
         "no-alert": 0,
-        "linebreak-style": 0
+        "linebreak-style": 0,
+        "max-len": ["error", { "code": 130 }]
     }
 }

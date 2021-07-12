@@ -45,3 +45,5 @@ window.appendDashInputDate = function appendDashInputDate(event) {
     event.target.value += '-';
   }
 };
+
+export default 'test';

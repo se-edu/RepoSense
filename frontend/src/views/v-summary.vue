@@ -1,9 +1,148 @@
-/* global Vuex getFontColor */
+<template lang="pug">
+#summary
+  form.summary-picker.mui-form--inline(onsubmit="return false;")
+    .summary-picker__section
+      .mui-textfield.search_box
+        input(type="text", v-on:change="updateFilterSearch", v-model="filterSearch")
+        label search
+        button.mui-btn.mui-btn--raised(type="button", v-on:click.prevent="resetFilterSearch") x
+      .mui-select.grouping
+        select(v-model="filterGroupSelection")
+          option(value="groupByNone") None
+          option(value="groupByRepos") Repo/Branch
+          option(value="groupByAuthors") Author
+        label group by
+      .mui-select.sort-group
+        select(v-model="sortGroupSelection", v-on:change="getFiltered")
+          option(value="groupTitle") &uarr; group title
+          option(value="groupTitle dsc") &darr; group title
+          option(value="totalCommits") &uarr; contribution
+          option(value="totalCommits dsc") &darr; contribution
+          option(value="variance") &uarr; variance
+          option(value="variance dsc") &darr; variance
+        label sort groups by
+      .mui-select.sort-within-group
+        select(
+          v-model="sortWithinGroupSelection",
+          v-bind:disabled="filterGroupSelection === 'groupByNone' || allGroupsMerged",
+          v-on:change="getFiltered"
+        )
+          option(value="title") &uarr; title
+          option(value="title dsc") &darr; title
+          option(value="totalCommits") &uarr; contribution
+          option(value="totalCommits dsc") &darr; contribution
+          option(value="variance") &uarr; variance
+          option(value="variance dsc") &darr; variance
+        label sort within groups by
+      .mui-select.granularity
+        select(v-model="filterTimeFrame", v-on:change="getFiltered")
+          option(value="commit") Commit
+          option(value="day") Day
+          option(value="week") Week
+        label granularity
+      .mui-textfield
+        input(v-if="isSafariBrowser", type="text", placeholder="yyyy-mm-dd",
+          v-bind:value="filterSinceDate", v-on:keyup.enter="updateTmpFilterSinceDate",
+          onkeydown="formatInputDateOnKeyDown(event)", oninput="appendDashInputDate(event)", maxlength=10)
+        input(v-else, type="date", name="since", v-bind:value="filterSinceDate", v-on:input="updateTmpFilterSinceDate",
+          v-bind:min="minDate", v-bind:max="filterUntilDate")
+        label since
+      .mui-textfield
+        input(v-if="isSafariBrowser", type="text", placeholder="yyyy-mm-dd",
+          v-bind:value="filterUntilDate", v-on:keyup.enter="updateTmpFilterUntilDate",
+          onkeydown="formatInputDateOnKeyDown(event)", oninput="appendDashInputDate(event)", maxlength=10)
+        input(v-else, type="date", name="until", v-bind:value="filterUntilDate", v-on:input="updateTmpFilterUntilDate",
+          v-bind:min="filterSinceDate", v-bind:max="maxDate")
+        label until
+      .mui-textfield
+        a(v-on:click="resetDateRange") Reset date range
+      .summary-picker__checkboxes.summary-picker__section
+        label.filter-breakdown
+          input.mui-checkbox(
+            type="checkbox",
+            v-model="filterBreakdown",
+            v-on:change="getFiltered"
+          )
+          span breakdown by file type
+        label.merge-group(
+          v-bind:style="filterGroupSelection === 'groupByNone' ? { opacity:0.5 } : { opacity:1.0 }"
+        )
+          input.mui-checkbox(
+            type="checkbox",
+            v-model="allGroupsMerged",
+            v-bind:disabled="filterGroupSelection === 'groupByNone'"
+          )
+          span merge all groups
+  .error-message-box(v-if="Object.entries(errorMessages).length")
+    .error-message-box__close-button(v-on:click="dismissTab($event)") &times;
+    .error-message-box__message The following issues occurred when analyzing the following repositories:
+    .error-message-box__failed-repo(v-for="errorBlock in errorMessages")
+      font-awesome-icon(icon="exclamation")
+      span.error-message-box__failed-repo--name {{ errorBlock.repoName }}
+      .error-message-box__failed-repo--reason(
+        v-if="errorBlock.errorMessage.startsWith('Unexpected error stack trace')"
+      )
+        span Oops, an unexpected error occurred. If this is due to a problem in RepoSense, please report in&nbsp;
+        a(
+          v-bind:href="getReportIssueGitHubLink(errorBlock.errorMessage)", target="_blank"
+        )
+          strong our issue tracker&nbsp;
+        span or email us at&nbsp;
+        a(
+          v-bind:href="getReportIssueEmailLink(errorBlock.errorMessage)"
+        )
+          span {{ getReportIssueEmailAddress() }}
+      .error-message-box__failed-repo--reason(v-else) {{ errorBlock.errorMessage }}
+  .fileTypes(v-if="filterBreakdown")
+    .checkboxes.mui-form--inline(v-if="Object.keys(fileTypeColors).length > 0")
+      label(style='background-color: #000000; color: #ffffff')
+        input.mui-checkbox--fileType#all(type="checkbox", v-model="checkAllFileTypes")
+        span All:&nbsp;
+      template(v-for="fileType in Object.keys(fileTypeColors)" )
+        label(
+          v-bind:key="fileType",
+          v-bind:style="{ 'background-color': fileTypeColors[fileType], \
+            'color': getFontColor(fileTypeColors[fileType])}"
+        )
+          input.mui-checkbox--fileType(
+            type="checkbox",
+            v-bind:id="fileType",
+            v-bind:value="fileType",
+            v-model="checkedFileTypes",
+            v-on:change="getFiltered"
+          )
+          span {{ fileType }}
+  v-summary-charts(
+    v-bind:filtered="filtered",
+    v-bind:checked-file-types="checkedFileTypes",
+    v-bind:avg-contribution-size="avgContributionSize",
+    v-bind:filter-group-selection="filterGroupSelection",
+    v-bind:filter-breakdown="filterBreakdown",
+    v-bind:filter-time-frame="filterTimeFrame",
+    v-bind:filter-since-date="filterSinceDate",
+    v-bind:filter-until-date="filterUntilDate",
+    v-bind:filter-search="filterSearch",
+    v-bind:min-date="minDate",
+    v-bind:max-date="maxDate"
+  )
+</template>
+
+<script>
+import { mapState } from 'vuex';
+
+import vSummaryCharts from '../components/v-summary-charts.vue';
+import getNonRepeatingColor from '../utils/ramp-colour-generator';
+import sortFiltered from '../utils/repo-sorter';
+
+const getFontColor = window.getFontColor;
 const dateFormatRegex = /([12]\d{3}-(0[1-9]|1[0-2])-(0[1-9]|[12]\d|3[01]))$/;
 
-window.vSummary = {
+export default {
+  name: 'v-summary',
+  components: {
+    vSummaryCharts,
+  },
   props: ['repos', 'errorMessages'],
-  template: window.$('v_summary').innerHTML,
   data() {
     return {
       checkedFileTypes: [],
@@ -130,7 +269,7 @@ window.vSummary = {
       return this.maxDate;
     },
 
-    ...Vuex.mapState(['mergedGroups']),
+    ...mapState(['mergedGroups']),
   },
   methods: {
     dismissTab(event) {
@@ -308,7 +447,7 @@ window.vSummary = {
         isSortingWithinDsc: this.isSortingWithinDsc,
       };
       this.getOptionWithOrder();
-      this.filtered = window.utilsSortFiltered(this.filtered, filterControl);
+      this.filtered = sortFiltered(this.filtered, filterControl);
     },
 
     updateMergedGroup(allGroupsMerged) {
@@ -421,8 +560,7 @@ window.vSummary = {
                 fileTypeColors[fileType] = selectedColors[i];
                 i += 1;
               } else {
-                fileTypeColors[fileType] = window
-                    .utilsGetNonRepeatingColor(Object.values(fileTypeColors));
+                fileTypeColors[fileType] = getNonRepeatingColor(Object.values(fileTypeColors));
               }
             }
             if (!this.fileTypes.includes(fileType)) {
@@ -705,7 +843,224 @@ window.vSummary = {
       this.filterGroupSelectionWatcherFlag = true;
     }, 0);
   },
-  components: {
-    vSummaryCharts: window.vSummaryCharts,
-  },
 };
+</script>
+
+<!-- Add "scoped" attribute to limit CSS to this component only -->
+<style lang="scss">
+@import '../styles/_colors.scss';
+
+/* Summary */
+#summary {
+  .summary-status {
+    text-align: center;
+  }
+
+  .icon-button {
+    color: mui-color('grey');
+    cursor: pointer;
+    padding: 0 1.2px 0 1.2px;
+    text-decoration: none;
+  }
+
+  .summary-picker {
+    align-items: center;
+    display: flex;
+    flex-flow: row wrap;
+    justify-content: center;
+    margin-bottom: 2rem;
+
+    &__section {
+      align-items: inherit;
+      display: flex;
+      flex: 0 1 auto;
+      flex-flow: inherit;
+      justify-content: inherit;
+    }
+
+    &__checkboxes {
+      label {
+        margin-left: .5rem;
+      }
+
+      span {
+        margin-left: .25rem;
+      }
+    }
+
+    .mui-textfield,
+    .mui-select {
+      margin: .5rem;
+      padding-right: 10px;
+    }
+
+    .mui-btn {
+      background: transparent;
+      box-shadow: none;
+      color: mui-color('grey');
+      font-size: .75rem;
+      font-weight: bold;
+      left: -8px;
+      margin: 0;
+      padding: 0;
+      vertical-align: middle;
+    }
+
+    .search_box {
+      align-items: center;
+      display: flex;
+    }
+
+    input {
+      font-size: .75rem;
+      padding-right: 10px;
+    }
+
+    label {
+      font-size: .75rem;
+      overflow-y: hidden;
+      text-align: left;
+      width: fit-content;
+    }
+
+    input,
+    select {
+      font-size: .75rem;
+    }
+  }
+
+  .summary-charts {
+    margin-bottom: 1.4rem;
+
+    &__title {
+      align-items: center;
+      display: flex;
+      font-weight: bold;
+      text-align: left;
+
+      & > * {
+        padding-right: .5rem;
+      }
+
+      &--index {
+        background: mui-color('black');
+        color: mui-color('white');
+        font-size: medium;
+        overflow: hidden;
+        padding: .1em .25em;
+        vertical-align: middle;
+      }
+
+      &--groupname {
+        font-size: medium;
+        padding: .5rem;
+      }
+
+      &--percentile {
+        @include mini-font;
+        color: mui-color('grey');
+        margin-left: auto;
+      }
+
+      &--contribution {
+        @include mini-font;
+        display: inline;
+      }
+    }
+
+    &__fileType--breakdown {
+      overflow-y: hidden;
+
+      &__legend {
+        display: inline;
+        float: left;
+      }
+    }
+  }
+
+  .summary-chart {
+    display: inline-block;
+    margin-bottom: 1rem;
+    position: relative;
+    text-align: left;
+    width: 100%;
+
+    &__title {
+      align-items: center;
+      clear: left;
+      display: flex;
+
+      & > * {
+        padding-right: .5rem;
+      }
+
+      &--index {
+        margin-left: 3px;
+      }
+
+      &--repo {
+        font-weight: bold;
+      }
+
+      &--index::after {
+        content: '.';
+      }
+
+      &--repo {
+        padding-right: .25rem;
+      }
+
+      &--contribution {
+        @include mini-font;
+      }
+
+      &--percentile {
+        @include mini-font;
+        color: mui-color('grey');
+        margin-left: auto;
+        padding-right: 0;
+      }
+    }
+
+    &__ramp {
+      position: relative;
+
+      .overlay {
+        height: 100%;
+        position: absolute;
+        top: 0;
+
+        &.show {
+          background-color: rgba(mui-color('white'), .5);
+          border: 1px dashed mui-color('black');
+        }
+
+        &.edge {
+          border-right: 1px dashed mui-color('black');
+        }
+      }
+    }
+
+    &__contrib {
+      text-align: left;
+
+      &--bar {
+        background-color: mui-color('red');
+        float: left;
+        height: 4px;
+        margin-top: 2px;
+      }
+    }
+  }
+
+  .active-icon {
+    background-color: mui-color('green');
+    border-radius: 2px;
+    color: mui-color('white');
+  }
+
+  .active-background {
+    background-color: mui-color('yellow', '200');
+  }
+}
+</style>

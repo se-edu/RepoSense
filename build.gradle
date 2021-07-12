@@ -1,3 +1,5 @@
+import org.apache.tools.ant.taskdefs.condition.Os
+
 plugins {
     id 'application'
     id 'checkstyle'
@@ -107,7 +109,17 @@ shadowJar {
     }
 }
 
-task zipReport(dependsOn: 'npmRunSpuild', type: Zip) {
+task installFrontend(type: com.liferay.gradle.plugins.node.tasks.NpmInstallTask) {
+    workingDir './frontend'
+}
+
+task buildFrontend(type: com.liferay.gradle.plugins.node.tasks.ExecuteNpmTask) {
+    dependsOn(installFrontend)
+    workingDir './frontend'
+    args = ['run', 'devbuild']
+}
+
+task zipReport(dependsOn: 'buildFrontend', type: Zip) {
     from 'frontend/build/'
     baseName = 'templateZip'
     destinationDir = file('src/main/resources')
@@ -149,7 +161,7 @@ task installCypress(type: com.liferay.gradle.plugins.node.tasks.NpmInstallTask) 
     workingDir = file('frontend/cypress/')
 }
 
-task cypress(dependsOn: ['installCypress', 'startServerInBackground'], type: com.liferay.gradle.plugins.node.tasks.ExecuteNpmTask) {
+task cypress(dependsOn: ['zipReport', 'installCypress', 'startServerInBackground'], type: com.liferay.gradle.plugins.node.tasks.ExecuteNpmTask) {
     tasks.startServerInBackground.mustRunAfter('installCypress')
 
     workingDir = file('frontend/cypress/')
@@ -195,6 +207,37 @@ String getRepoSenseVersion() {
         repoSenseVersion = versionDetails().commitDistance == 0 ? versionDetails().lastTag : versionDetails().gitHash
     }
     return repoSenseVersion
+}
+
+task syncFrontendPublic(type: Sync) {
+    from 'reposense-report'
+    into 'frontend/public/'
+    include '**/*.json'
+    includeEmptyDirs = false
+    preserve {
+        include 'index.html'
+        include 'favicon.ico'
+    }
+}
+
+task macHotReloadFrontend(type: Exec) {
+    dependsOn(installFrontend)
+    onlyIf {Os.isFamily(Os.FAMILY_MAC)}
+    workingDir './frontend'
+    commandLine 'osascript', '-e', '"tell application "Terminal" to do script "npm run serveOpen""'
+}
+
+task windowsHotReloadFrontend(type: Exec) {
+    dependsOn(installFrontend)
+    onlyIf {Os.isFamily(Os.FAMILY_WINDOWS)}
+    workingDir './frontend'
+    commandLine 'cmd','/c', 'START', '"hotreload RepoSense frontend"', 'npm', 'run', 'serveOpen'
+}
+
+task hotReloadFrontend() {
+    dependsOn syncFrontendPublic
+    finalizedBy windowsHotReloadFrontend
+    finalizedBy macHotReloadFrontend
 }
 
 void deleteReposAddressDirectory() {

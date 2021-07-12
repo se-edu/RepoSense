@@ -67,6 +67,7 @@ jobs:
       run: |
         npm install
         npm run lint
+      working-directory: ./frontend
 
     - name: Build with Gradle
       run: time ./gradlew clean checkstyleMain checkstyleTest test systemTest coverage
@@ -155,6 +156,7 @@ jobs:
       run: |
         npm install
         npm run lint
+      working-directory: ./frontend
 
     - name: Build with Gradle
       run: time ./gradlew clean checkstyleMain checkstyleTest test systemTest coverage

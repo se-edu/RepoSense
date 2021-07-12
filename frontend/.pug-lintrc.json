@@ -10,7 +10,6 @@
   "maximumLineLength": 120,
   "requireClassLiteralsBeforeAttributes": true,
   "requireIdLiteralsBeforeAttributes": true,
-  "requireLineFeedAtFileEnd": true,
   "requireLowerCaseAttributes": true,
   "requireLowerCaseTags": true,
   "requireStrictEqualityOperators": true,

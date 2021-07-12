@@ -1,5 +1,6 @@
-// eslint-disable-next-line new-cap
-const randomGenerator = new Math.seedrandom('Seeded Random Generator');
+import seedrandom from 'seedrandom';
+
+const randomGenerator = seedrandom('Seeded Random Generator');
 
 function getRandomHex() {
   const maxHexColorValue = 16777214;
@@ -49,7 +50,8 @@ function deltaE(rgbA, rgbB) {
 }
 
 function hasSimilarExistingColors(existingColors, newHex) {
-  const deltaEThreshold = 11; // the lower limit of delta E to be similar, more info at http://zschuessler.github.io/DeltaE/learn/
+  const deltaEThreshold = 11;
+  // the lower limit of delta E to be similar, more info at http://zschuessler.github.io/DeltaE/learn/
   return existingColors.some((existingHex) => {
     const existingRGB = window.getHexToRGB(existingHex);
     const newRGB = window.getHexToRGB(newHex);
@@ -65,4 +67,4 @@ function getNonRepeatingColor(existingColors) {
   return generatedHex;
 }
 
-window.utilsGetNonRepeatingColor = getNonRepeatingColor;
+export default getNonRepeatingColor;

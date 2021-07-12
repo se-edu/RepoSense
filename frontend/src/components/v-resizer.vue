@@ -1,4 +1,30 @@
-/* global Vuex */
+<template lang="pug">
+#app-wrapper(
+  v-bind:style="appStyles",
+  @mousemove="mouseMove",
+  @mouseup="deregisterMouseMove",
+  @mouseleave="deregisterMouseMove"
+)
+  #tab-resize-guide(v-bind:style="guideStyles")
+  .left-resize-container
+    slot(name="left")
+  #tab-resize(
+    @mousedown.left="registerMouseMove",
+    v-show="isTabActive"
+  )
+    .tab-close(v-on:click="closeTab")
+      i.fas.fa-caret-right
+  .right-resize-container(
+    v-bind:style="rightContainerStyles",
+    v-if="isTabActive"
+  )
+    slot(name="right")
+</template>
+
+
+<script>
+import { mapState } from 'vuex';
+
 const DRAG_BAR_WIDTH = 13.25;
 const SCROLL_BAR_WIDTH = 17;
 const GUIDE_BAR_WIDTH = 2;
@@ -13,8 +39,8 @@ const throttledEvent = (delay, handler) => {
   };
 };
 
-window.vResizer = {
-  template: window.$('v_resizer').innerHTML,
+export default {
+  name: 'v-resizer',
 
   data() {
     return {
@@ -75,6 +101,7 @@ window.vResizer = {
       return () => {};
     },
 
-    ...Vuex.mapState(['isTabActive']),
+    ...mapState(['isTabActive']),
   },
 };
+</script>

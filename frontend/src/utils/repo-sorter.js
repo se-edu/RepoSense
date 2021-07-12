@@ -6,13 +6,6 @@ function getGroupCommitsVariance(total, group) {
   return total + group.variance;
 }
 
-// function getGroupCommitsVariance(total, group) {
-//   if (this.sortingOption === 'totalCommits') {
-//     return total + group.checkedFileTypeContribution;
-//   }
-//   return total + group[this.sortingOption];
-// }
-
 function sortingHelper(element, sortingOption) {
   if (sortingOption === 'totalCommits') {
     return element.reduce(getTotalCommits, 0);
@@ -129,4 +122,4 @@ function sortFiltered(filtered, filterControl) {
   return full;
 }
 
-window.utilsSortFiltered = sortFiltered;
+export default sortFiltered;
