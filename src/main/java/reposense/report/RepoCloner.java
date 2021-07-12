@@ -119,11 +119,18 @@ public class RepoCloner {
             String bareRepoPath = FileUtil.getBareRepoPath(configs[currentIndex]).toString();
             currentRepoDefaultBranch = GitBranch.getCurrentBranch(bareRepoPath);
         } catch (GitBranchException gbe) {
-            // GitBranch will throw this exception when repository is empty
             logger.log(Level.WARNING, String.format(MESSAGE_ERROR_GETTING_BRANCH,
                     configs[currentIndex].getLocation(), configs[currentIndex].getBranch()), gbe);
             return null;
         }
+
+        if (currentRepoDefaultBranch == null) {
+            // Current repository is empty
+            logger.log(Level.WARNING, String.format(MESSAGE_ERROR_GETTING_BRANCH,
+                    configs[currentIndex].getLocation(), configs[currentIndex].getBranch()));
+            return null;
+        }
+
         cleanupPrevRepoFolder();
 
         previousIndex = currentIndex;

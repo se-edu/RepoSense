@@ -34,6 +34,7 @@ dependencies {
     implementation  group: 'org.apache.commons', name: 'commons-csv', version: '1.6'
     implementation  group: 'org.apache.commons', name: 'commons-text', version: '1.9'
     implementation  group: 'org.fusesource.jansi', name: 'jansi', version: '1.18'
+    implementation  group: 'org.eclipse.jgit', name: 'org.eclipse.jgit', version: '5.9.0.202009080501-r'
 
     testImplementation group: 'junit', name: 'junit', version: '4.12'
 }
