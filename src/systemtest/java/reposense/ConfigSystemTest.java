@@ -74,6 +74,13 @@ public class ConfigSystemTest {
         verifyAllJson(actualFiles, FT_TEMP_DIR);
     }
 
+    @Test
+    public void test30DaysFromUntilDateAndFindPreviousAuthors() throws Exception {
+        generateReport(getInputWithUntilDate("1/11/2017"), false, false);
+        Path actualFiles = loadResource(getClass(), "30daysFromUntilDate/expected");
+        verifyAllJson(actualFiles, FT_TEMP_DIR);
+    }
+
     /**
      * System test with a specified since date and until date, with the last modified date time in each
      * line of code.
@@ -150,6 +157,8 @@ public class ConfigSystemTest {
                 repoConfigs, cliArguments.getSinceDate(), cliArguments.getUntilDate());
         RepoConfiguration.setZoneIdToRepoConfigs(repoConfigs, cliArguments.getZoneId().toString());
         RepoConfiguration.setIsLastModifiedDateIncludedToRepoConfigs(repoConfigs, shouldIncludeModifiedDateInLines);
+        RepoConfiguration.setIsFindingPreviousAuthorsPerformedToRepoConfigs(repoConfigs,
+                cliArguments.isFindingPreviousAuthorsPerformed());
 
         ReportGenerator.generateReposReport(repoConfigs, FT_TEMP_DIR, DUMMY_ASSETS_DIR, reportConfig,
                 TEST_REPORT_GENERATED_TIME, cliArguments.getSinceDate(), cliArguments.getUntilDate(),

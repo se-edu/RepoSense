@@ -34,6 +34,7 @@ import reposense.authorship.AuthorshipReporter;
 import reposense.authorship.model.AuthorshipSummary;
 import reposense.commits.CommitsReporter;
 import reposense.commits.model.CommitContributionSummary;
+import reposense.git.GitBlame;
 import reposense.git.GitClone;
 import reposense.git.GitLsTree;
 import reposense.git.GitRevParse;
@@ -84,6 +85,7 @@ public class ReportGenerator {
     private static final String MESSAGE_BRANCH_DOES_NOT_EXIST = "Branch %s does not exist in %s! Analysis terminated.";
 
     private static final String LOG_ERROR_CLONING = "Failed to clone from %s";
+    private static final String LOG_ERROR_FILE_DELETION = "Failed to delete file at %s";
     private static final String LOG_BRANCH_DOES_NOT_EXIST = "Branch \"%s\" does not exist.";
     private static final String LOG_BRANCH_CONTAINS_ILLEGAL_FILE_PATH =
             "Branch contains file paths with illegal characters and not analyzable.";
@@ -343,9 +345,14 @@ public class ReportGenerator {
         updateAuthorList(config);
         updateIgnoreCommitList(config);
 
+        if (config.isFindingPreviousAuthorsPerformed()) {
+            FileUtil.writeIgnoreRevsFile(getIgnoreRevsFilePath(config.getRepoRoot()), config.getIgnoreCommitList());
+        }
+
         CommitContributionSummary commitSummary = CommitsReporter.generateCommitSummary(config);
         AuthorshipSummary authorshipSummary = AuthorshipReporter.generateAuthorshipSummary(config);
         List<Path> generatedFiles = generateIndividualRepoReport(repoReportDirectory, commitSummary, authorshipSummary);
+
         logger.info(String.format(MESSAGE_COMPLETE_ANALYSIS, config.getLocation(), config.getBranch()));
         return generatedFiles;
     }
@@ -480,6 +487,10 @@ public class ReportGenerator {
 
     private static String getSummaryResultPath(String targetFileLocation) {
         return targetFileLocation + "/" + SummaryJson.SUMMARY_JSON_FILE_NAME;
+    }
+
+    private static String getIgnoreRevsFilePath(String targetFileLocation) {
+        return targetFileLocation + GitBlame.IGNORE_COMMIT_LIST_FILE_NAME;
     }
 
     private static String getIndividualAuthorshipPath(String repoReportDirectory) {

@@ -38,6 +38,7 @@ public class RepoConfiguration {
     private transient List<CommitHash> ignoreCommitList;
     private transient boolean isLastModifiedDateIncluded;
     private transient boolean isShallowCloningPerformed;
+    private transient boolean isFindingPreviousAuthorsPerformed;
     private transient boolean isFormatsOverriding;
     private transient boolean isIgnoreGlobListOverriding;
     private transient boolean isIgnoreCommitListOverriding;
@@ -49,13 +50,13 @@ public class RepoConfiguration {
 
     public RepoConfiguration(RepoLocation location, String branch) {
         this(location, branch, Collections.emptyList(), Collections.emptyList(), false, Collections.emptyList(),
-                false, false, false, false);
+                false, false, false, false, false);
     }
 
     public RepoConfiguration(RepoLocation location, String branch, List<FileType> formats, List<String> ignoreGlobList,
             boolean isStandaloneConfigIgnored, List<CommitHash> ignoreCommitList, boolean isFormatsOverriding,
             boolean isIgnoreGlobListOverriding, boolean isIgnoreCommitListOverriding,
-            boolean isShallowCloningPerformed) {
+            boolean isShallowCloningPerformed, boolean isFindingPreviousAuthorsPerformed) {
         this.authorConfig = new AuthorConfiguration(location, branch);
         this.location = location;
         this.branch = location.isEmpty() ? DEFAULT_BRANCH : branch;
@@ -67,6 +68,7 @@ public class RepoConfiguration {
         this.isIgnoreGlobListOverriding = isIgnoreGlobListOverriding;
         this.isIgnoreCommitListOverriding = isIgnoreCommitListOverriding;
         this.isShallowCloningPerformed = isShallowCloningPerformed;
+        this.isFindingPreviousAuthorsPerformed = isFindingPreviousAuthorsPerformed;
 
         String organization = location.getOrganization();
         String repoName = location.getRepoName();
@@ -105,6 +107,13 @@ public class RepoConfiguration {
                                                                  boolean isShallowCloningPerformed) {
         if (isShallowCloningPerformed) {
             configs.stream().forEach(config -> config.setIsShallowCloningPerformed(true));
+        }
+    }
+
+    public static void setIsFindingPreviousAuthorsPerformedToRepoConfigs(List<RepoConfiguration> configs,
+                                                                         boolean isFindingPreviousAuthorsPerformed) {
+        if (isFindingPreviousAuthorsPerformed) {
+            configs.stream().forEach(config -> config.setIsFindingPreviousAuthorsPerformed(true));
         }
     }
 
@@ -395,6 +404,10 @@ public class RepoConfiguration {
         this.isShallowCloningPerformed = isShallowCloningPerformed;
     }
 
+    public void setIsFindingPreviousAuthorsPerformed(boolean isFindingPreviousAuthorsPerformed) {
+        this.isFindingPreviousAuthorsPerformed = isFindingPreviousAuthorsPerformed;
+    }
+
     public boolean isLastModifiedDateIncluded() {
         return this.isLastModifiedDateIncluded;
     }
@@ -550,4 +563,9 @@ public class RepoConfiguration {
     public boolean isIgnoreCommitListOverriding() {
         return isIgnoreCommitListOverriding;
     }
+
+    public boolean isFindingPreviousAuthorsPerformed() {
+        return isFindingPreviousAuthorsPerformed;
+    }
+
 }

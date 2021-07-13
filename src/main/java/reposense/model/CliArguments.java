@@ -23,6 +23,7 @@ public abstract class CliArguments {
     protected int numCloningThreads;
     protected int numAnalysisThreads;
     protected ZoneId zoneId;
+    protected boolean isFindingPreviousAuthorsPerformed;
 
     public ZoneId getZoneId() {
         return zoneId;
@@ -80,6 +81,10 @@ public abstract class CliArguments {
         return numAnalysisThreads;
     }
 
+    public boolean isFindingPreviousAuthorsPerformed() {
+        return isFindingPreviousAuthorsPerformed;
+    }
+
     @Override
     public boolean equals(Object other) {
         // short circuit if same object
@@ -106,6 +111,7 @@ public abstract class CliArguments {
                 && this.isStandaloneConfigIgnored == otherCliArguments.isStandaloneConfigIgnored
                 && this.numCloningThreads == otherCliArguments.numCloningThreads
                 && this.numAnalysisThreads == otherCliArguments.numAnalysisThreads
-                && this.zoneId.equals(otherCliArguments.zoneId);
+                && this.zoneId.equals(otherCliArguments.zoneId)
+                && this.isFindingPreviousAuthorsPerformed == otherCliArguments.isFindingPreviousAuthorsPerformed;
     }
 }

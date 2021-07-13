@@ -26,6 +26,7 @@ import java.util.zip.ZipOutputStream;
 import com.google.gson.Gson;
 import com.google.gson.GsonBuilder;
 
+import reposense.model.CommitHash;
 import reposense.model.FileType;
 import reposense.model.RepoConfiguration;
 import reposense.system.LogsManager;
@@ -103,6 +104,26 @@ public class FileUtil {
         try (PrintWriter out = new PrintWriter(path)) {
             out.print(result);
             out.print("\n");
+            return Optional.of(path).map(Paths::get);
+        } catch (FileNotFoundException e) {
+            logger.log(Level.SEVERE, e.getMessage(), e);
+            return Optional.empty();
+        }
+    }
+
+    /**
+     * Writes the ignore revs file containing the {@code ignoreCommitList} at the given {@code path}.
+     * @return An Optional containing the Path to the ignore revs file, or an empty Optional
+     *         if there was an error while writing the ignore revs file.
+     */
+    public static Optional<Path> writeIgnoreRevsFile(String path, List<CommitHash> ignoreCommitList) {
+        String contentOfIgnoreRevsFile = ignoreCommitList
+                                            .stream()
+                                            .map(CommitHash::toString)
+                                            .reduce("", (hashes, newHash) -> hashes + newHash + "\n");
+
+        try (PrintWriter out = new PrintWriter(path)) {
+            out.print(contentOfIgnoreRevsFile);
             return Optional.of(path).map(Paths::get);
         } catch (FileNotFoundException e) {
             logger.log(Level.SEVERE, e.getMessage(), e);
@@ -299,4 +320,5 @@ public class FileUtil {
     private static boolean isFileTypeInPath(Path path, String... fileTypes) {
         return Arrays.stream(fileTypes).anyMatch(path.toString()::endsWith);
     }
+
 }

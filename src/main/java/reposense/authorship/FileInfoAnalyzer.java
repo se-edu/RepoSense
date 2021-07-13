@@ -138,7 +138,13 @@ public class FileInfoAnalyzer {
      * on the file.
      */
     private static void aggregateBlameAuthorModifiedAndDateInfo(RepoConfiguration config, FileInfo fileInfo) {
-        String blameResults = getGitBlameResult(config, fileInfo.getPath());
+        String blameResults;
+        if (!config.isFindingPreviousAuthorsPerformed()) {
+            blameResults = getGitBlameResult(config, fileInfo.getPath());
+        } else {
+            blameResults = getGitBlameWithPreviousAuthorsResult(config, fileInfo.getPath());
+        }
+
         String[] blameResultLines = blameResults.split("\n");
         Path filePath = Paths.get(fileInfo.getPath());
         Long sinceDateInMs = config.getSinceDate().getTime();
@@ -179,5 +185,12 @@ public class FileInfoAnalyzer {
      */
     private static String getGitBlameResult(RepoConfiguration config, String filePath) {
         return GitBlame.blame(config.getRepoRoot(), filePath);
+    }
+
+    /**
+     * Returns the analysis result from running git blame with finding previous authors enabled on {@code filePath}.
+     */
+    private static String getGitBlameWithPreviousAuthorsResult(RepoConfiguration config, String filePath) {
+        return GitBlame.blameWithPreviousAuthors(config.getRepoRoot(), filePath);
     }
 }

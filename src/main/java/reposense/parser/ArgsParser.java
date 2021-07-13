@@ -56,6 +56,7 @@ public class ArgsParser {
     public static final String[] TIMEZONE_FLAGS = new String[]{"--timezone", "-t"};
     public static final String[] VERSION_FLAGS = new String[]{"--version", "-V"};
     public static final String[] LAST_MODIFIED_DATE_FLAGS = new String[]{"--last-modified-date", "-l"};
+    public static final String[] FIND_PREVIOUS_AUTHORS_FLAGS = new String[]{"--find-previous-authors", "-F"};
 
     public static final String[] CLONING_THREADS_FLAG = new String[]{"--cloning-threads"};
     public static final String[] ANALYSIS_THREADS_FLAG = new String[]{"--analysis-threads"};
@@ -187,6 +188,13 @@ public class ArgsParser {
                         + "One kind of valid timezones is relative to UTC. E.g. UTC, UTC+08, UTC-1030. \n"
                         + "If not provided, system default timezone will be used.");
 
+        parser.addArgument(FIND_PREVIOUS_AUTHORS_FLAGS)
+                .dest(FIND_PREVIOUS_AUTHORS_FLAGS[0])
+                .action(Arguments.storeTrue())
+                .help("A flag to make RepoSense employ git blame's ignore revisions functionality, it will ignore "
+                        + "the revisions caused by commits in the ignore commit list and find previous authors for the "
+                        + "revised areas of code from non-ignored commits (if available).");
+
         // Mutex flags - these will always be the last parameters in help message.
         mutexParser.addArgument(CONFIG_FLAGS)
                 .dest(CONFIG_FLAGS[0])
@@ -257,6 +265,7 @@ public class ArgsParser {
             boolean isStandaloneConfigIgnored = results.get(IGNORE_FLAGS[0]);
             boolean shouldIncludeLastModifiedDate = results.get(LAST_MODIFIED_DATE_FLAGS[0]);
             boolean shouldPerformShallowCloning = results.get(SHALLOW_CLONING_FLAGS[0]);
+            boolean shouldFindPreviousAuthors = results.get(FIND_PREVIOUS_AUTHORS_FLAGS[0]);
 
             // Report config is ignored if --repos is provided
             if (locations == null) {
@@ -325,7 +334,7 @@ public class ArgsParser {
                 return new LocationsCliArguments(locations, outputFolderPath, assetsFolderPath, sinceDate, untilDate,
                         isSinceDateProvided, isUntilDateProvided, numCloningThreads, numAnalysisThreads, formats,
                         shouldIncludeLastModifiedDate, shouldPerformShallowCloning, isAutomaticallyLaunching,
-                        isStandaloneConfigIgnored, zoneId);
+                        isStandaloneConfigIgnored, zoneId, shouldFindPreviousAuthors);
             }
 
             if (configFolderPath.equals(EMPTY_PATH)) {
@@ -334,7 +343,7 @@ public class ArgsParser {
             return new ConfigCliArguments(configFolderPath, outputFolderPath, assetsFolderPath, sinceDate, untilDate,
                     isSinceDateProvided, isUntilDateProvided, numCloningThreads, numAnalysisThreads, formats,
                     shouldIncludeLastModifiedDate, shouldPerformShallowCloning, isAutomaticallyLaunching,
-                    isStandaloneConfigIgnored, zoneId, reportConfig);
+                    isStandaloneConfigIgnored, zoneId, reportConfig, shouldFindPreviousAuthors);
         } catch (HelpScreenException hse) {
             throw hse;
         } catch (ArgumentParserException ape) {

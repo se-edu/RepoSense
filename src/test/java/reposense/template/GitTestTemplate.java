@@ -2,6 +2,7 @@ package reposense.template;
 
 import static org.junit.Assert.assertEquals;
 
+import java.io.File;
 import java.util.Arrays;
 import java.util.Collections;
 import java.util.Iterator;
@@ -23,6 +24,7 @@ import reposense.model.CommitHash;
 import reposense.model.FileTypeTest;
 import reposense.model.RepoConfiguration;
 import reposense.model.RepoLocation;
+import reposense.util.FileUtil;
 
 /**
  * Contains templates for git testing.
@@ -30,6 +32,8 @@ import reposense.model.RepoLocation;
 public class GitTestTemplate {
     protected static final String TEST_REPO_GIT_LOCATION = "https://github.com/reposense/testrepo-Alpha.git";
     protected static final String DISK_REPO_DISPLAY_NAME = "testrepo-Alpha_master";
+    protected static final String TEST_IGNORE_REVS_FILE_LOCATION =
+            "repos/reposense_testrepo-Alpha/testrepo-Alpha/.git-blame-ignore-revs";
     protected static final String FIRST_COMMIT_HASH = "7d7584f";
     protected static final String ROOT_COMMIT_HASH = "fd425072e12004b71d733a58d819d845509f8db3";
     protected static final String TEST_COMMIT_HASH = "2fb6b9b";
@@ -109,6 +113,14 @@ public class GitTestTemplate {
         config.getAuthorDetailsToAuthorMap().put(FAKE_AUTHOR_NAME, new Author(FAKE_AUTHOR_NAME));
 
         return fileInfo;
+    }
+
+    public void createTestIgnoreRevsFile(List<CommitHash> toIgnore) {
+        FileUtil.writeIgnoreRevsFile(TEST_IGNORE_REVS_FILE_LOCATION, toIgnore);
+    }
+
+    public void removeTestIgnoreRevsFile() {
+        new File(TEST_IGNORE_REVS_FILE_LOCATION).delete();
     }
 
     public FileResult getFileResult(String relativePath) {

@@ -18,6 +18,7 @@ public class RepoConfigCsvParser extends CsvParser<RepoConfiguration> {
     public static final String REPO_CONFIG_FILENAME = "repo-config.csv";
     private static final String IGNORE_STANDALONE_CONFIG_KEYWORD = "yes";
     private static final String SHALLOW_CLONING_CONFIG_KEYWORD = "yes";
+    private static final String FIND_PREVIOUS_AUTHORS_KEYWORD = "yes";
 
     /**
      * Positions of the elements of a line in repo-config.csv config file
@@ -30,6 +31,7 @@ public class RepoConfigCsvParser extends CsvParser<RepoConfiguration> {
     private static final String IGNORE_COMMIT_LIST_CONFIG_HEADER = "Ignore Commit List";
     private static final String IGNORE_AUTHOR_LIST_CONFIG_HEADER = "Ignore Authors List";
     private static final String SHALLOW_CLONING_CONFIG_HEADER = "Shallow Cloning";
+    private static final String FIND_PREVIOUS_AUTHORS_CONFIG_HEADER = "Find Previous Authors";
 
     public RepoConfigCsvParser(Path csvFilePath) throws IOException {
         super(csvFilePath);
@@ -53,6 +55,7 @@ public class RepoConfigCsvParser extends CsvParser<RepoConfiguration> {
         return new String[] {
                 BRANCH_HEADER, FILE_FORMATS_HEADER, IGNORE_GLOB_LIST_HEADER, IGNORE_STANDALONE_CONFIG_HEADER,
                 IGNORE_COMMIT_LIST_CONFIG_HEADER, IGNORE_AUTHOR_LIST_CONFIG_HEADER, SHALLOW_CLONING_CONFIG_HEADER,
+                FIND_PREVIOUS_AUTHORS_CONFIG_HEADER
         };
     }
 
@@ -98,10 +101,19 @@ public class RepoConfigCsvParser extends CsvParser<RepoConfiguration> {
                     "Ignoring unknown value " + shallowCloningConfig + " in shallow cloning column.");
         }
 
+        String findPreviousAuthorsConfig = get(record, FIND_PREVIOUS_AUTHORS_CONFIG_HEADER);
+        boolean isFindingPreviousAuthorsPerformed = findPreviousAuthorsConfig
+                                                        .equalsIgnoreCase(FIND_PREVIOUS_AUTHORS_KEYWORD);
+
+        if (!isFindingPreviousAuthorsPerformed && !findPreviousAuthorsConfig.isEmpty()) {
+            logger.warning(
+                    "Ignoring unknown value " + findPreviousAuthorsConfig + " in find previous authors column.");
+        }
+
         RepoConfiguration config = new RepoConfiguration(
                 location, branch, formats, ignoreGlobList, isStandaloneConfigIgnored, ignoreCommitList,
                 isFormatsOverriding, isIgnoreGlobListOverriding, isIgnoreCommitListOverriding,
-                isShallowCloningPerformed);
+                isShallowCloningPerformed, isFindingPreviousAuthorsPerformed);
         config.setIgnoredAuthorsList(ignoredAuthorsList);
         config.setIsIgnoredAuthorsListOverriding(isIgnoredAuthorsListOverriding);
 
